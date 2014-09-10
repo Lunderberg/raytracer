@@ -1,4 +1,4 @@
-all: main derivations.pdf
+all: main derivations.pdf reducing_constants short_variables
 
 %: %.cc
 	g++ $< -o $@ -std=c++11
