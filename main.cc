@@ -41,7 +41,7 @@ static const double diffuse = 0.6;
 static const double specular = 0.2;
 static const double specular_power = 5;
 //Other scene variables.
-vec3 light_pos(5,10,-3);
+vec3 light_dir(0.2,-0.5,0.3);
 vector<vec3> spheres;
 
 // Normal will contain the normal to the last sphere.
@@ -63,7 +63,7 @@ double next_intersection(vec3& pos, vec3& dir){
 
 	// No interactions, return false
 	if(std::isnan(min_dist)){
-		return 0;
+		return false;
 	}
 
 	//Update the position and direction, return true.
@@ -71,15 +71,12 @@ double next_intersection(vec3& pos, vec3& dir){
 	normal = (pos - scattering_sphere).UnitVector();
 	vec3 delta_dir = -2*(dir*normal)*normal;
 	dir = (dir + delta_dir).UnitVector();
-	return min_dist;
+	return true;
 }
 
 bool shadow_test(vec3 pos){
-	vec3 delta = light_pos - pos;
-	double light_dist2 = delta.Mag2();
-	delta = delta.UnitVector();
-	double dist = next_intersection(pos,delta);
-	return (dist==0) || (dist*dist>light_dist2);
+	vec3 temp = (-1)*light_dir.UnitVector();
+	return !next_intersection(pos,temp);
 }
 
 vec3 color_of(vec3 pos, vec3 dir){
@@ -90,12 +87,11 @@ vec3 color_of(vec3 pos, vec3 dir){
 	while(next_intersection(pos,dir)){
 		double color_used = color_remaining*(1-reflectivity);
 
-		vec3 light_dir = (light_pos-pos).UnitVector();
-		vec3 light_reflect = 2*(normal*light_dir)*normal - light_dir;
+		vec3 light_reflect = -2*(normal*light_dir)*normal + light_dir;
 
 		vec3 ambient_col = ambient*sphere_color;
-		vec3 diffuse_col = diffuse*(normal*light_dir)*sphere_color;
-		vec3 specular_col = specular*pow(normal*light_reflect,specular_power)*sphere_color;
+		vec3 diffuse_col = -diffuse*(normal*light_dir)*sphere_color;
+		vec3 specular_col = specular*pow(-(normal*light_reflect),specular_power)*sphere_color;
 		col = col + color_used*(ambient_col + shadow_test(pos)*(diffuse_col + specular_col));
 		color_remaining -= color_used;
 	}
@@ -140,6 +136,8 @@ void write_ppm(const char* filename, unsigned int width, unsigned int height, un
 
 int main(){
 	printf("Hello\n");
+
+	light_dir = light_dir.UnitVector();
 
 	// E
 	spheres.push_back({0,0,5});
