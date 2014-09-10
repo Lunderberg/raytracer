@@ -1,0 +1,92 @@
+\documentclass{article}
+\usepackage{amsmath}
+
+\newcommand{\hatvec}[1]{\hat{\vec{#1}}}
+\renewcommand{\vec}[1]{\mathbf{#1}}
+
+\begin{document}
+
+A ray beginning at $\vec r_0$ travelling in the direction of $\vec v$.
+A sphere at $\vec s$, with radius $R$.
+
+\begin{align*}
+  \vec r(t) &= \vec r_0 + \hatvec v t \\
+  \textrm{dist}^2
+  &= (\vec s - \vec r(t)) \cdot (\vec s - \vec r(t)) \\
+  &= s^2 - 2\vec s \cdot \vec r(t) + r(t)^2 \\
+  &= s^2 - 2\vec s \cdot (\vec r_0 + \hatvec v t) + (\vec r_0 + \hatvec v t)^2 \\
+  &= s^2 - 2\vec s \cdot \vec r_0 - 2\vec s \cdot \hatvec v t
+        + r_0^2 + 2\vec r_0 \cdot \hatvec v t + t^2 \\
+  &= s^2 - 2\vec s \cdot \vec r_0 + r_0^2
+        + 2(\vec r_0-\vec s) \cdot \hatvec v t + t^2 \\
+\end{align*}
+
+Finding the time of closest approach.
+
+\begin{align*}
+  \frac{d\textrm{dist}^2}{dt}
+  &= 2(\vec r_0 - \vec s) \cdot \hatvec v + 2t = 0 \\
+  t_{min} &= (\vec s - \vec r_0) \cdot \hatvec v
+\end{align*}
+
+Finding the location of closest approach.
+\begin{align*}
+  r(t_{min})
+  &= \vec r_0 + \hatvec v t_{min} \\
+  &= \vec r_0 + \hatvec v \left(\hatvec v \cdot (\vec s - \vec r_0) \right) \\
+\end{align*}
+
+Finding the square of the distance of closest approach.
+\begin{align*}
+  \textrm{dist}^2
+  &= \left(\vec r_0 - \vec s
+            + \hatvec v \left(\hatvec v \cdot (\vec s - \vec r_0) \right)\right)^2 \\
+  &= (\vec r_0 - \vec s)^2
+       - 2\left((\vec r_0 - \vec s)\cdot \hatvec v\right)^2
+            + \left(\hatvec v \cdot (\vec s - \vec r_0) \right)^2 \\
+  &= (\vec r_0 - \vec s)^2
+       - \left((\vec r_0 - \vec s)\cdot \hatvec v\right)^2
+\end{align*}
+
+When reflecting, first find the component perpendicular to the surface.
+Then add twice that amount to the vector to reflect.
+\begin{align*}
+  \vec v_f &= \vec v_0 + 2(\vec v \cdot (\vec r_{min}-\vec s))(\vec r_{min}-\vec s)
+\end{align*}
+
+Remake of the intersection logic.
+The previous iteration assumed that the ray would reach the distance of minimum approach.
+Instead, I should look for when the approach is exactly the radius.
+I assume that $\vec v$ is a unit vector.
+\begin{align*}
+  \vec r(t) &= \vec r_0 + \vec v t \\
+  \textrm{dist} &= \left| \vec r(t) - \vec s \right| = R \\
+  R^2
+  &= (\vec r(t) - \vec s)^2 \\
+  &= (\vec v t + \vec r_0 - \vec s)^2 \\
+  &= (\vec v \cdot \vec v)t^2 + 2\vec v \cdot (\vec r_0-\vec s)t + (\vec r_0 - \vec s)^2 \\
+  0 &= t^2 + 2\vec v \cdot (\vec r_0-\vec s)t + (\vec r_0 - \vec s)^2 - R^2 \\
+  &\left\{\begin{aligned}
+      B &= 2\vec v \cdot (\vec r_0-\vec s) \\
+      C &= (\vec r_0 - \vec s)^2 - R^2 \\
+      t &= \frac{-B \pm \sqrt{B^2-4C}}{2}
+  \end{aligned}\right. \\
+  &\left\{\begin{aligned}
+      B &= \vec v \cdot (\vec r_0-\vec s) \\
+      C &= (\vec r_0 - \vec s)^2 - R^2 \\
+      t &= -B \pm \sqrt{B^2-C}
+  \end{aligned}\right.
+\end{align*}
+
+Selection of which root to use:
+If $\vec r_0$ is outside the sphere, which should always be the case,
+  $C$ is strictly greater than zero.
+Therefore, $\sqrt{B^2-C} > |B|$.
+Conditions:
+If $B>0$, then the ray is moving away from the sphere.
+If $C>B^2$, then the ray never intersects with the sphere.
+If $B<0$ and $C>B^2$, then $t = -B-\sqrt{B^2-C}$.
+
+
+
+\end{document}
