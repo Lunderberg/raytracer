@@ -38,8 +38,6 @@ static const double radius = 1;
 static const double reflectivity = 0.2;
 static const double ambient = 0.2;
 static const double diffuse = 0.6;
-static const double specular = 0.2;
-static const double specular_power = 5;
 //Other scene variables.
 vec3 light_dir(0.2,-0.5,0.3);
 vector<vec3> spheres;
@@ -85,14 +83,10 @@ vec3 color_of(vec3 pos, vec3 dir){
 	double color_remaining = 1;
 	//Run through all intersections.
 	while(next_intersection(pos,dir)){
-		double color_used = color_remaining*(1-reflectivity);
-
-		vec3 light_reflect = -2*(normal*light_dir)*normal + light_dir;
-
 		vec3 ambient_col = ambient*sphere_color;
 		vec3 diffuse_col = -diffuse*(normal*light_dir)*sphere_color;
-		vec3 specular_col = specular*pow(-(normal*light_reflect),specular_power)*sphere_color;
-		col = col + color_used*(ambient_col + shadow_test(pos)*(diffuse_col + specular_col));
+		double color_used = color_remaining*(1-reflectivity);
+		col = col + color_used*(ambient_col + shadow_test(pos)*diffuse_col);
 		color_remaining -= color_used;
 	}
 
@@ -114,8 +108,8 @@ vec3 color_of(vec3 pos, vec3 dir){
 }
 
 vec3 color_of_pixel(int i, int width, int j, int height){
-	const int n_repeat = 5;
-	const double pixel_width = 4e-3;
+	const int n_repeat = 20;
+	const double pixel_width = 3e-3;
 	vec3 color;
 	for(int k=0; k<n_repeat; k++){
 		vec3 pos(10,0,-10);
