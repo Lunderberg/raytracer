@@ -1,6 +1,5 @@
 #include <cstdio>
 #include <cmath>
-#include <vector>
 
 struct vec3{
 	vec3(double x=0,double y=0,double z=0) : x(x),y(y),z(z){}
@@ -13,27 +12,28 @@ struct vec3{
 
 // Other scene variables.
 vec3 light_dir(-0.32,0.81,-0.49);
-std::vector<vec3> spheres;
+vec3* spheres = new vec3[22];
 
 // Keep track of the most recent scatter sphere
 vec3 scattering_sphere;
 double next_intersection(vec3 pos, vec3 dir){
 	double min_dist = 0;
-	for(auto s : spheres){
-		double B = dir*(s-pos);
-		double C = (pos-s)*(pos-s)-1;
+	for(vec3* s = spheres; ++s<spheres+23;){
+		double B = dir*(*s-pos);
+		double C = (pos-*s)*(pos-*s)-1;
 		if(B>0 && C<B*B){
 			double dist = B-sqrt(B*B-C);
 			if(min_dist==0 || dist<min_dist){
 				min_dist = dist;
-				scattering_sphere = s;
+				scattering_sphere = *s;
 			}
 		}
 	}
 	return min_dist;
 }
 
-vec3 color_of(vec3 pos, vec3 dir){
+vec3 color_of(vec3 dir){
+	vec3 pos;
 	double col = 0;
 	double color_remaining = 1;
 	//Run through all intersections.
@@ -54,11 +54,16 @@ vec3 color_of(vec3 pos, vec3 dir){
 		double x = pos.x - (pos.y+5)*dir.x/dir.y;
 		double z = pos.z - (pos.y+5)*dir.z/dir.y;
 		double other_color = !!((int(x)+int(z))%2);
-		end_color = vec3(other_color,other_color,1)*(next_intersection({x,-5,z},light_dir)?0.2:1);
+		end_color = vec3(other_color,other_color,1)*(next_intersection(vec3(x,-5,z),light_dir)?0.2:1);
 	} else //Sky, blue, growing dark at the horizon.
 		end_color = vec3(dir.y);
 
 	return vec3(1,1,1)*col + end_color*color_remaining;
+}
+
+int a=1;
+int rand(){
+	return a = a * 1235 % 7919;
 }
 
 int main(){
@@ -66,7 +71,8 @@ int main(){
 
 	char* p = "0*06+,2-.4:BCDJTUW`fabh";
 	while(*++p)
-		spheres.push_back({*p/6*2-14,*p%6*2,5});
+		*spheres++ = vec3(*p/6*2-24,*p%6*2,15);
+	spheres -= 23;
 
 	char col_arr[3*640*480];
 	char* c = col_arr;
@@ -74,9 +80,8 @@ int main(){
 		for(int i=0; i<640; i++){
 			vec3 color;
 			for(int k=0;k++<25;)
-				color = color + color_of({10,0,-10},
-																 vec3(i-320+(k%5)*.2,
-																			-j+320-(k/5)*.2,
+				color = color + color_of(vec3(i-320+rand()%50*2e-2,
+																			-j+320+rand()%50*2e-2,
 																			333).UnitVector())*.04;
 			*c++ = color.z*255;
 			*c++ = color.y*255;

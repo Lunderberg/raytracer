@@ -10,36 +10,22 @@ struct vec3{
 	vec3():x(0),y(0),z(0){}
 	vec3(double x,double y,double z) : x(x),y(y),z(z){}
 	double x,y,z;
-	double Mag2();
-	vec3 UnitVector();
+	vec3 operator+(vec3 a){return vec3(x+a.x, y+a.y, z+a.z);}
+	vec3 operator*(double d){return vec3(d*x, d*y, d*z);}
+	double operator*(vec3 a){return x*a.x + y*a.y + z*a.z;}
+	vec3 operator-(vec3 a){return (*this)+a*(-1);}
+	vec3 UnitVector(){return (*this)*(1/std::sqrt(Mag2()));}
+	double Mag2(){return (*this)*(*this);}
 };
-vec3 operator+(vec3 lhs, vec3 rhs){
-	return vec3(lhs.x+rhs.x,lhs.y+rhs.y,lhs.z+rhs.z);
-}
-vec3 operator*(double d, vec3 v){
-	return vec3(d*v.x,d*v.y,d*v.z);
-}
-double operator*(vec3 lhs, vec3 rhs){
-	return lhs.x*rhs.x + lhs.y*rhs.y + lhs.z*rhs.z;
-}
-vec3 operator-(vec3 lhs,vec3 rhs){
-	return lhs + (-1)*rhs;
-}
-double vec3::Mag2(){
-	return (*this)*(*this);
-}
-vec3 vec3::UnitVector(){
-	return (1/std::sqrt(Mag2()))*(*this);
-}
 
 //All the different properties of the spheres.
-static const vec3 sphere_color(1,1,1);
-static const double radius = 1;
-static const double reflectivity = 0.2;
-static const double ambient = 0.2;
-static const double diffuse = 0.6;
+static vec3 sphere_color(1,1,1);
+static double radius = 1;
+static double reflectivity = 0.2;
+static double ambient = 0.2;
+static double diffuse = 0.6;
 //Other scene variables.
-vec3 light_dir(0.2,-0.5,0.3);
+vec3 light_dir(0.32,-0.81,0.49);
 vector<vec3> spheres;
 
 // Normal will contain the normal to the last sphere.
@@ -65,15 +51,15 @@ double next_intersection(vec3& pos, vec3& dir){
 	}
 
 	//Update the position and direction, return true.
-	pos = pos + (min_dist-1e-5) * dir;
+	pos = pos + dir*min_dist;
 	normal = (pos - scattering_sphere).UnitVector();
-	vec3 delta_dir = -2*(dir*normal)*normal;
+	vec3 delta_dir = normal*(-2*(dir*normal));
 	dir = (dir + delta_dir).UnitVector();
 	return true;
 }
 
 bool shadow_test(vec3 pos){
-	vec3 temp = (-1)*light_dir.UnitVector();
+	vec3 temp = light_dir.UnitVector()*(-1);
 	return !next_intersection(pos,temp);
 }
 
@@ -83,10 +69,10 @@ vec3 color_of(vec3 pos, vec3 dir){
 	double color_remaining = 1;
 	//Run through all intersections.
 	while(next_intersection(pos,dir)){
-		vec3 ambient_col = ambient*sphere_color;
-		vec3 diffuse_col = -diffuse*(normal*light_dir)*sphere_color;
+		vec3 ambient_col = sphere_color*ambient;
+		vec3 diffuse_col = sphere_color*diffuse*(-1)*(normal*light_dir);
 		double color_used = color_remaining*(1-reflectivity);
-		col = col + color_used*(ambient_col + shadow_test(pos)*diffuse_col);
+		col = col + (ambient_col + diffuse_col*shadow_test(pos))*color_used;
 		color_remaining -= color_used;
 	}
 
@@ -98,11 +84,11 @@ vec3 color_of(vec3 pos, vec3 dir){
 		double z = pos.z - ((pos.y-ground_height)*dir.z/dir.y);
 		int other_color = (int(x)+int(z))%2;
 		other_color = abs(other_color);
-		end_color = (shadow_test({x,ground_height,z})?1.0:ambient)*vec3(1,other_color,other_color);
+		end_color = vec3(1,other_color,other_color)*(shadow_test({x,ground_height,z})?1.0:ambient);
 	} else { //Sky, blue, growing dark at the horizon.
-		end_color = (dir*vec3(0,1,0))*vec3(0,0,1);
+		end_color = vec3(0,0,1)*(dir*vec3(0,1,0));
 	}
-	col = col + color_remaining*end_color;
+	col = col + end_color*color_remaining;
 
 	return col;
 }
@@ -116,7 +102,7 @@ vec3 color_of_pixel(int i, int width, int j, int height){
 		double x = pixel_width*(i-width/2+1e-2*(rand()%100-50));
 		double y = -pixel_width*(j-width/2+1e-2*(rand()%100-50));
 		vec3 dir(x,y,1);
-		color = color + (1.0/n_repeat)*color_of(pos,dir);
+		color = color + color_of(pos,dir)*(1.0/n_repeat);
 	}
 	return color;
 }
@@ -130,8 +116,6 @@ void write_ppm(const char* filename, unsigned int width, unsigned int height, un
 
 int main(){
 	printf("Hello\n");
-
-	light_dir = light_dir.UnitVector();
 
 	// E
 	spheres.push_back({0,0,5});
