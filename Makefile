@@ -1,4 +1,4 @@
-OBJ=main_11 derivations.pdf reducing_constants_11 short_variables_11 no_vector
+OBJ=main_11 derivations.pdf reducing_constants_11 no_vector short
 
 all: $(OBJ)
 
