@@ -75,9 +75,9 @@ int main(){
 			vec3 color;
 			for(int k=0;k++<25;)
 				color = color + color_of({10,0,-10},
-																 vec3(i-320+(k%5)*.2,
-																			-j+320-(k/5)*.2,
-																			333).UnitVector())*.04;
+							 vec3(i-320+(k%5)*.2,
+							      -j+320-(k/5)*.2,
+							      333).UnitVector())*.04;
 			*c++ = color.z*255;
 			*c++ = color.y*255;
 			*c++ = color.x*255;
